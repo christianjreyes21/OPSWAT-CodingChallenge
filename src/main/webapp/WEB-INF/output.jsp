@@ -21,7 +21,7 @@
 	</style>
 </head>
 <body>
-	<input type="hidden" value=${hashUploadOutput} id="results">
+	<input type="hidden" value='${hashUploadOutput}' id="results">
 	<div class="section"></div>
 	<div class="container">
 		<h3 class="center">Results</h3>
@@ -30,7 +30,6 @@
 		<h5 class="center">Filename: ${fileName}</h5>
 		<h5 class="center">${hashOutput}</h5>
 		<h5 class="center">${uploadOutput.data_id}</h5>
-		<h5 class="center">${hashUploadOutput}</h5>
 		<div class="section"></div>
 		<div class="section"></div>
 		<div class="section"></div>
@@ -44,9 +43,10 @@
 		src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
 	<script>
 		var string = document.getElementById("results").value;
-		var results = JSON.parse(string);
-		console.log(string);
-		console.log(results); 
+		let results = JSON.parse(string);
+		console.log(results.scan_results.scan_details); 
+		
+		
 	</script>
 	
 </body>

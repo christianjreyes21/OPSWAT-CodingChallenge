@@ -46,7 +46,7 @@
 		var string = document.getElementById("results").value;
 		var results = JSON.parse(string);
 		console.log(string);
-		console.log(results);
+		console.log(results); 
 	</script>
 	
 </body>

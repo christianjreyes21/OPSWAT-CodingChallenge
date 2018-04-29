@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -142,7 +143,15 @@ public class mainController {
 					{
 						repeat=false;
 					}
-					System.out.println("SCAN_DETAILS"+jsonObject1.get("scan_results"));
+					JSONObject obj = (JSONObject)jsonParser.parse(jsonObject1.get("scan_results").toString());
+					for (Iterator key=(Iterator) obj.keySet(); key.hasNext();)
+					{
+						JSONObject name = (JSONObject) obj.get(key.next());
+						System.out.println("threat_found: "+name.get("threat_found"));
+						System.out.println("scan_result: "+name.get("scan_result"));
+						System.out.println("def_time: "+name.get("def_time"));
+					}
+					System.out.println("SCAN_DETAILS"+obj.toString());
 					session.setAttribute("hashUploadOutput", jsonObject1);
 					System.out.println(jsonObject1.toString());
 					TimeUnit.SECONDS.sleep(5);

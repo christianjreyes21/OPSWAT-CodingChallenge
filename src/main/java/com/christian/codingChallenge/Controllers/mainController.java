@@ -7,16 +7,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -29,9 +25,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 
 @Controller
 public class mainController {
@@ -66,7 +62,7 @@ public class mainController {
 		System.out.println(fileName);
 		try {
 			System.out.println(MD5(retrieveFromTxt(fileName)));
-			//System.out.println(retrieveFromTxt(fileName));
+			// System.out.println(retrieveFromTxt(fileName));
 			hash = MD5(retrieveFromTxt(fileName));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -86,23 +82,22 @@ public class mainController {
 			String inputLine;
 			String hashOutput = "";
 			while ((inputLine = in.readLine()) != null) {
-				hashOutput+=inputLine;
+				hashOutput += inputLine;
 			}
 			in.close();
 			session.setAttribute("hashOutput", hashOutput);
 			System.out.println(con.getResponseCode());
 			System.out.println(hashOutput.toString());
 
-			String uploadOutput="";
 			if (hashOutput.contains("Not Found")) {
 				url = new URL("https://api.metadefender.com/v2/file");
 				con = (HttpURLConnection) url.openConnection();
 				con.setRequestMethod("POST");
 				con.setRequestProperty("apikey", API_KEY);
-				
+
 				Map<String, String> parameters = new HashMap<>();
 				parameters.put("formData", fileName);
-				 
+
 				con.setDoOutput(true);
 				DataOutputStream out = new DataOutputStream(con.getOutputStream());
 				out.writeBytes(ParameterStringBuilder.getParamsString(parameters));
@@ -110,26 +105,18 @@ public class mainController {
 				out.close();
 
 				in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-				StringBuilder responseStrBuilder = new StringBuilder();
 				inputLine = "";
-				
-				
-//				while ((inputLine = in.readLine()) != null) {
-//					uploadOutput+="\n"+inputLine;
-//					responseStrBuilder.append(inputLine);
-//				}
+
 				InputStream inputStream = con.getInputStream();
 				JSONParser jsonParser = new JSONParser();
-				JSONObject jsonObject = (JSONObject)jsonParser.parse(
-						new InputStreamReader(inputStream, "UTF-8"));
-				//System.out.println(uploadOutput.toString());
+				JSONObject jsonObject = (JSONObject) jsonParser.parse(new InputStreamReader(inputStream, "UTF-8"));
+				// System.out.println(uploadOutput.toString());
 				System.out.println(jsonObject);
 				session.setAttribute("uploadOutput", jsonObject);
-				
-// DATA_ID CHECKED BY HASH (1ST CALL)
-				boolean repeat=true;
-				while(repeat)
-				{
+
+				// DATA_ID CHECKED BY HASH (1ST CALL)
+				boolean repeat = true;
+				while (repeat) {
 					url = new URL("https://api.metadefender.com/v2/file/" + jsonObject.get("data_id"));
 					System.out.println("MAKING CALL: " + jsonObject.get("data_id"));
 					con = (HttpURLConnection) url.openConnection();
@@ -137,30 +124,21 @@ public class mainController {
 					con.setRequestProperty("apikey", API_KEY);
 					in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 					inputStream = con.getInputStream();
-					JSONParser jsonParser1 = new JSONParser();
-					JSONObject jsonObject1 = (JSONObject)jsonParser.parse(
-							new InputStreamReader(inputStream, "UTF-8"));
-					if(jsonObject1.toString().contains("progress_percentage\":100"))
-					{
-						repeat=false;
+					JSONObject jsonObject1 = (JSONObject) jsonParser.parse(new InputStreamReader(inputStream, "UTF-8"));
+					if (jsonObject1.toString().contains("progress_percentage\":100")) {
+						repeat = false;
 					}
-					JSONObject obj = (JSONObject)jsonParser.parse(jsonObject1.get("scan_results").toString());
-//					for (Iterator key=(Iterator) jsonParser.parse((Reader) obj.keySet().iterator()); key.hasNext();)
-//					{
-//						JSONObject name = (JSONObject) obj.get(key.next());
-//						System.out.println("threat_found: "+name.get("threat_found"));
-//						System.out.println("scan_result: "+name.get("scan_result"));
-//						System.out.println("def_time: "+name.get("def_time"));
-//					}
-					System.out.println("SCAN_DETAILS"+obj.toString());
-					session.setAttribute("hashUploadOutput", jsonObject1);
+					JSONObject obj = (JSONObject) jsonParser.parse(jsonObject1.get("scan_results").toString());
+
+					System.out.println("SCAN_DETAILS" + obj.toString());
+					session.setAttribute("hashUploadOutput", jsonObject);
+					session.setAttribute("test", obj);
 					System.out.println(jsonObject1.toString());
 					TimeUnit.SECONDS.sleep(5);
 				}
-				
-				
+
 			}
-			
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -168,10 +146,18 @@ public class mainController {
 
 		return "redirect:/output";
 	}
-	
+
 	@RequestMapping("/output")
 	private String output() {
 		return "output.jsp";
+	}
+
+	@RestController
+	private class api {
+		@RequestMapping("/getJson")
+		private Object getJson(HttpSession session) {
+			return session.getAttribute("test");
+		}
 	}
 
 	String outputfilename = "";
@@ -210,5 +196,3 @@ public class mainController {
 	}
 
 }
-
-
